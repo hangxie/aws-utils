@@ -27,6 +27,10 @@ CGO_ENABLED := 0
 LDFLAGS     += -extldflags "-static"
 LDFLAGS     += -X main.version=$(VERSION) -X main.build=$(BUILD)
 
+COMMANDS := \
+		 aws-cfn-ls \
+		 aws-cw-log-dump
+
 .EXPORT_ALL_VARIABLES:
 
 .PHONY: all deps tools format lint test build docker-build clean release-build help
@@ -66,8 +70,10 @@ tools:  ## Install build tools
 build: deps  ## Build locally for local os/arch creating $(BUILDDIR) in ./
 	@echo "==> Building executable"
 	@mkdir -p $(BUILDDIR)
-	@CGO_ENABLED=$(CGO_ENABLED) \
-		$(GO) build $(GOFLAGS) -tags '$(TAGS)' -ldflags '$(LDFLAGS)' -o $(BUILDDIR) ./cmd/aws-cfn-ls/
+	@for CMD in $(COMMANDS); do \
+		echo "==> building $${CMD} ..."; \
+		CGO_ENABLED=$(CGO_ENABLED) $(GO) build $(GOFLAGS) -tags '$(TAGS)' -ldflags '$(LDFLAGS)' -o $(BUILDDIR) ./cmd/$${CMD}; \
+	done
 
 clean:  ## Clean up the build dirs
 	@echo "==> Cleaning up build dirs"
